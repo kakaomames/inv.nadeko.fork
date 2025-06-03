@@ -3,10 +3,19 @@ module BackendInfo
   @@exvpp_url : Array(String) = Array.new(CONFIG.invidious_companion.size, "")
   @@status : Array(Int32) = Array.new(CONFIG.invidious_companion.size, 0)
   @@csp : Array(String) = Array.new(CONFIG.invidious_companion.size, "")
+  @@working_ends : Array(Int32) = Array(Int32).new(0)
   @@mutex : Mutex = Mutex.new
 
   def check_backends
     check_companion()
+    LOGGER.debug("Invidious companion: Updating working_ends")
+    @@working_ends.clear
+    @@status.each_with_index do |_, index|
+      if @@status[index] == 2
+          @@working_ends.push(index)
+      end
+    end
+    LOGGER.debug("Invidious companion: New working_ends \"#{@@working_ends}\"")
   end
 
   private def check_companion
@@ -68,6 +77,10 @@ module BackendInfo
 
   def get_status
     return @@status
+  end
+
+  def get_working_ends
+    return @@working_ends
   end
 
   def get_exvpp

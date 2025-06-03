@@ -689,10 +689,11 @@ module YoutubeAPI
 
     begin
       if env.nil?
-        current_companion = rand(CONFIG.invidious_companion.size)
+        current_companion = BackendInfo.get_working_ends.sample
       else
         current_companion = env.get("current_companion").as(Int32)
       end
+      LOGGER.trace("Invidious companion: current_companion: #{current_companion}")
       response = COMPANION_POOL[current_companion].client &.post(endpoint, headers: headers, body: data.to_json)
       body = response.body
       if (response.status_code != 200)
