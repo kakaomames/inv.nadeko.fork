@@ -5,35 +5,54 @@ module BackendInfo
   @@csp : Array(String) = Array.new(CONFIG.invidious_companion.size, "")
   @@working_ends : Array(Int32) = Array(Int32).new(0)
   @@mutex : Mutex = Mutex.new
+  @@working_mutex : Mutex = Mutex.new
 
   def check_backends
     check_companion()
     LOGGER.debug("Invidious companion: Updating working_ends")
-    @@working_ends.clear
+    updated_ends = Array(Int32).new(0)
     @@status.each_with_index do |_, index|
       if @@status[index] == 2
-          @@working_ends.push(index)
+          updated_ends.push(index)
       end
+    end
+    @@working_mutex.synchronize do
+      @@working_ends = updated_ends
     end
     LOGGER.debug("Invidious companion: New working_ends \"#{@@working_ends}\"")
   end
 
   private def check_companion
+    # Create Channels the size of CONFIG.invidious_companion
+    comp_size = CONFIG.invidious_companion.size
+    channels = Channel(Nil).new(comp_size)
+    LOGGER.debug("Invidious companion: comp_size \"#{comp_size}\"")
     CONFIG.invidious_companion.each_with_index do |companion, index|
       spawn do
         begin
-          response = HTTP::Client.get "#{companion.private_url}/healthz"
+          client = HTTP::Client.new(companion.private_url)
+          client.connect_timeout = 10.seconds
+          response = client.get("/healthz")
           if response.status_code == 200
             check_videoplayback_proxy(companion, index)
             generate_csp([companion.public_url.to_s, companion.i2p_public_url.to_s], @@exvpp_url[index], index)
           else
-            @@status[index] = 0
+            @@mutex.synchronize do
+              @@status[index] = 0
+            end
           end
         rescue
-          @@status[index] = 0
+          @@mutex.synchronize do
+            @@status[index] = 0
+          end
+        ensure
+          LOGGER.debug("Invidious companion: Done Index: \"#{index}\"")
+          channels.send(nil)
         end
       end
     end
+    # Wait until we receive a signal from them all
+    comp_size.times { channels.receive }
   end
 
   private def check_videoplayback_proxy(companion : Config::CompanionConfig, index : Int32)
@@ -41,26 +60,36 @@ module BackendInfo
       info = HTTP::Client.get "#{companion.private_url}/info"
       exvpp_url = JSON.parse(info.body)["external_videoplayback_proxy"]?.try &.to_s
     rescue JSON::ParseException
-      @@status[index] = 2
+      @@mutex.synchronize do
+        @@status[index] = 2
+      end
       return
     end
 
     exvpp_url = "" if exvpp_url.nil?
     @@exvpp_url[index] = exvpp_url
     if exvpp_url.empty?
-      @@status[index] = 2
+      @@mutex.synchronize do
+        @@status[index] = 2
+      end
       return
     else
       begin
         exvpp_health = HTTP::Client.get "#{exvpp_url}/health"
         if exvpp_health.status_code == 200
-          @@status[index] = 2
+          @@mutex.synchronize do
+            @@status[index] = 2
+          end
           return exvpp_url
         else
-          @@status[index] = 1
+          @@mutex.synchronize do
+            @@status[index] = 1
+          end
         end
       rescue
-        @@status[index] = 1
+        @@mutex.synchronize do
+          @@status[index] = 1
+        end
       end
     end
   end
@@ -80,7 +109,11 @@ module BackendInfo
   end
 
   def get_working_ends
-    return @@working_ends
+    # We need to stall this if we are updating the array
+    # Not doing this can cause this to return weird values while being updated
+    @@working_mutex.synchronize do
+      @@working_ends.dup
+    end
   end
 
   def get_exvpp

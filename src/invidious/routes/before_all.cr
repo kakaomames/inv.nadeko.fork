@@ -46,7 +46,9 @@ module Invidious::Routes::BeforeAll
         begin
           current_companion = env.request.cookies[CONFIG.server_id_cookie_name].value.try &.to_i
         rescue
-          current_companion = BackendInfo.get_working_ends.sample
+          working_ends = BackendInfo.get_working_ends
+          LOGGER.debug("Invidious companion youtube_api: get_working_ends: \"#{working_ends}\"")
+          current_companion = working_ends.sample
         end
 
         if current_companion > CONFIG.invidious_companion.size
