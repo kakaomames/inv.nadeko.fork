@@ -4,28 +4,22 @@ module BackendInfo
   @@status : Array(Int32) = Array.new(CONFIG.invidious_companion.size, 0)
   @@csp : Array(String) = Array.new(CONFIG.invidious_companion.size, "")
   @@working_ends : Array(Int32) = Array(Int32).new(0)
-  @@mutex : Mutex = Mutex.new
-  @@working_mutex : Mutex = Mutex.new
+  @@csp_mutex : Mutex = Mutex.new
+  @@check_mutex : Mutex = Mutex.new
+  
 
   def check_backends
     check_companion()
-    LOGGER.debug("Invidious companion: Updating working_ends")
-    updated_ends = Array(Int32).new(0)
-    @@status.each_with_index do |_, index|
-      if @@status[index] == 2
-          updated_ends.push(index)
-      end
-    end
-    @@working_mutex.synchronize do
-      @@working_ends = updated_ends
-    end
     LOGGER.debug("Invidious companion: New working_ends \"#{@@working_ends}\"")
+    LOGGER.debug("Invidious companion: New status \"#{@@status}\"")
   end
 
   private def check_companion
     # Create Channels the size of CONFIG.invidious_companion
     comp_size = CONFIG.invidious_companion.size
     channels = Channel(Nil).new(comp_size)
+    updated_ends = Array(Int32).new(0)
+    updated_status = Array(Int32).new(CONFIG.invidious_companion.size, 0)
     LOGGER.debug("Invidious companion: comp_size \"#{comp_size}\"")
     CONFIG.invidious_companion.each_with_index do |companion, index|
       spawn do
@@ -34,16 +28,16 @@ module BackendInfo
           client.connect_timeout = 10.seconds
           response = client.get("/healthz")
           if response.status_code == 200
-            check_videoplayback_proxy(companion, index)
+            check_videoplayback_proxy(companion, index, updated_status, updated_ends)
             generate_csp([companion.public_url.to_s, companion.i2p_public_url.to_s], @@exvpp_url[index], index)
           else
-            @@mutex.synchronize do
-              @@status[index] = 0
+            @@check_mutex.synchronize do
+              updated_status[index] = Backend_Status::Dead.to_i
             end
           end
         rescue
-          @@mutex.synchronize do
-            @@status[index] = 0
+          @@check_mutex.synchronize do
+            updated_status[index] = Backend_Status::Dead.to_i
           end
         ensure
           LOGGER.debug("Invidious companion: Done Index: \"#{index}\"")
@@ -52,16 +46,20 @@ module BackendInfo
       end
     end
     # Wait until we receive a signal from them all
+    LOGGER.debug("Invidious companion: Updating working_ends")
     comp_size.times { channels.receive }
+    @@working_ends = updated_ends
+    @@status = updated_status
   end
 
-  private def check_videoplayback_proxy(companion : Config::CompanionConfig, index : Int32)
+  private def check_videoplayback_proxy(companion : Config::CompanionConfig, index : Int32, updated_status : Array(Int32), updated_ends : Array(Int32))
     begin
       info = HTTP::Client.get "#{companion.private_url}/info"
       exvpp_url = JSON.parse(info.body)["external_videoplayback_proxy"]?.try &.to_s
     rescue JSON::ParseException
-      @@mutex.synchronize do
-        @@status[index] = 2
+      @@check_mutex.synchronize do
+        updated_status[index] = Backend_Status::Working.to_i
+        updated_ends.push(index)
       end
       return
     end
@@ -69,33 +67,35 @@ module BackendInfo
     exvpp_url = "" if exvpp_url.nil?
     @@exvpp_url[index] = exvpp_url
     if exvpp_url.empty?
-      @@mutex.synchronize do
-        @@status[index] = 2
+      @@check_mutex.synchronize do
+        updated_status[index] = Backend_Status::Working.to_i
+        updated_ends.push(index)
       end
       return
     else
       begin
         exvpp_health = HTTP::Client.get "#{exvpp_url}/health"
         if exvpp_health.status_code == 200
-          @@mutex.synchronize do
-            @@status[index] = 2
-          end
+            @@check_mutex.synchronize do
+              updated_status[index] = Backend_Status::Working.to_i
+              updated_ends.push(index)
+            end
           return exvpp_url
         else
-          @@mutex.synchronize do
-            @@status[index] = 1
+          @@check_mutex.synchronize do
+            updated_status[index] = Backend_Status::Problems.to_i
           end
         end
       rescue
-        @@mutex.synchronize do
-          @@status[index] = 1
+        @@check_mutex.synchronize do
+          updated_status[index] = Backend_Status::Problems.to_i
         end
       end
     end
   end
 
   private def generate_csp(companion_url : Array(String), exvpp_url : String? = nil, index : Int32? = nil)
-    @@mutex.synchronize do
+    @@csp_mutex.synchronize do
       @@csp[index] = ""
       companion_url.each do |url|
         @@csp[index] += " #{url}"
@@ -105,15 +105,13 @@ module BackendInfo
   end
 
   def get_status
+    # Shouldn't need to lock since we never edit this array, only change the pointer.
     return @@status
   end
 
   def get_working_ends
-    # We need to stall this if we are updating the array
-    # Not doing this can cause this to return weird values while being updated
-    @@working_mutex.synchronize do
-      @@working_ends.dup
-    end
+    # Shouldn't need to lock since we never edit this array, only change the pointer.
+    return @@working_ends
   end
 
   def get_exvpp
@@ -124,7 +122,7 @@ module BackendInfo
     # A little mutex to prevent sending a partial CSP header
     # Not sure if this is necessary. But if the @@csp[index] is being assigned
     # at the same time when it's being accessed, a data race will appear
-    @@mutex.synchronize do
+    @@csp_mutex.synchronize do
       return @@csp[index], @@csp[index]
     end
   end
