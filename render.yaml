@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: invidious
+    env: docker
+    repo: https://github.com/kakaomames/inv.nadeko.fork
+    branch: master
+    plan: free
+    autoDeploy: true
+    healthCheckPath: /
+    envVars:
+      - key: INVIDIOUS_CONFIG
+        value: config/config.yml
+
+databases:
+  - name: invidious-db
+    plan: free
