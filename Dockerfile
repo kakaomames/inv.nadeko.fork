@@ -12,6 +12,12 @@ RUN shards install --production
 COPY ./src/ ./src/
 # TODO: .git folder is required for building – this is destructive.
 # See definition of CURRENT_BRANCH, CURRENT_COMMIT and CURRENT_VERSION.
+# .git フォルダの偽装を作成する例
+RUN mkdir .git && \
+    echo "ref: refs/heads/backend-color-testing" > .git/HEAD && \
+    mkdir -p .git/refs/heads && \
+    echo "3262bbdb0c4c7e1f3a87d74605a028d02233a548" > .git/refs/heads/backend-color-testing
+
 COPY ./.git/ ./.git/
 
 # Required for fetching player dependencies
