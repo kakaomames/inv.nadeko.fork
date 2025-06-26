@@ -1,0 +1,75 @@
+2025-06-26T01:37:49.729507783Z #20 [builder  6/12] RUN shards install --production
+2025-06-26T01:37:49.729510153Z #20 0.057 I: Resolving dependencies
+2025-06-26T01:37:49.879612256Z #20 0.061 I: Fetching https://github.com/will/crystal-pg.git
+2025-06-26T01:37:49.879643077Z #20 0.061 I: Fetching https://github.com/crystal-lang/crystal-sqlite3.git
+2025-06-26T01:37:49.879647287Z #20 0.061 I: Fetching https://github.com/kemalcr/kemal.git
+2025-06-26T01:37:49.879650647Z #20 0.061 I: Fetching https://github.com/jeromegn/kilt.git
+2025-06-26T01:37:49.879654007Z #20 0.061 I: Fetching https://github.com/iv-org/protodec.git
+2025-06-26T01:37:49.879657337Z #20 0.061 I: Fetching https://github.com/athena-framework/negotiation.git
+2025-06-26T01:37:49.879660547Z #20 0.061 I: Fetching https://github.com/stefanwille/crystal-redis.git
+2025-06-26T01:37:49.879663887Z #20 0.061 I: Fetching https://github.com/petoem/inotify.cr.git
+2025-06-26T01:37:50.130157999Z #20 0.457 I: Fetching https://github.com/mamantoha/http_proxy.git
+2025-06-26T01:37:51.060560611Z #20 1.257 I: Fetching https://github.com/crystal-lang/crystal-db.git
+2025-06-26T01:37:51.661683537Z #20 1.900 I: Fetching https://github.com/luislavena/radix.git
+2025-06-26T01:37:51.661710978Z #20 1.900 I: Fetching https://github.com/crystal-loot/exception_page.git
+2025-06-26T01:37:52.112247071Z #20 2.368 I: Fetching https://github.com/sija/backtracer.cr.git
+2025-06-26T01:37:52.562925368Z #20 2.796 I: Fetching https://github.com/ysbaddaden/pool.git
+2025-06-26T01:37:53.270484469Z #20 3.587 I: Installing db (0.13.1)
+2025-06-26T01:37:53.27050335Z #20 3.598 I: Installing pg (0.28.0)
+2025-06-26T01:37:53.414680978Z #20 3.609 I: Installing sqlite3 (0.21.0)
+2025-06-26T01:37:53.414696268Z #20 3.615 I: Installing radix (0.4.1)
+2025-06-26T01:37:53.414699648Z #20 3.622 I: Installing backtracer (1.2.2)
+2025-06-26T01:37:53.414702539Z #20 3.628 I: Installing exception_page (0.2.2)
+2025-06-26T01:37:53.414705349Z #20 3.634 I: Installing kemal (1.1.2)
+2025-06-26T01:37:53.414708109Z #20 3.646 I: Installing kilt (0.6.1)
+2025-06-26T01:37:53.414710949Z #20 3.653 I: Installing protodec (0.1.5)
+2025-06-26T01:37:53.414716039Z #20 3.657 I: Installing athena-negotiation (0.1.1)
+2025-06-26T01:37:53.414718889Z #20 3.665 I: Installing pool (0.2.4)
+2025-06-26T01:37:53.414723609Z #20 3.669 I: Installing redis (2.9.1)
+2025-06-26T01:37:53.414728259Z #20 3.685 I: Installing inotify (1.0.3)
+2025-06-26T01:37:53.414732819Z #20 3.692 I: Installing http_proxy (0.10.3)
+2025-06-26T01:37:53.414737059Z #20 DONE 3.7s
+2025-06-26T01:37:53.547053649Z 
+2025-06-26T01:37:53.547086389Z #21 [builder  7/12] COPY ./src/ ./src/
+2025-06-26T01:37:53.547091169Z #21 DONE 0.1s
+2025-06-26T01:37:53.547094889Z 
+2025-06-26T01:37:53.547098749Z #22 [builder  8/12] COPY ./scripts/ ./scripts/
+2025-06-26T01:37:53.54710232Z #22 DONE 0.0s
+2025-06-26T01:37:53.54710571Z 
+2025-06-26T01:37:53.54710931Z #23 [builder  9/12] COPY ./assets/ ./assets/
+2025-06-26T01:37:53.54711285Z #23 DONE 0.0s
+2025-06-26T01:37:53.698197333Z 
+2025-06-26T01:37:53.698233784Z #24 [builder 10/12] COPY ./videojs-dependencies.yml ./videojs-dependencies.yml
+2025-06-26T01:37:53.698239154Z #24 DONE 0.0s
+2025-06-26T01:37:53.698243714Z 
+2025-06-26T01:37:53.698248804Z #25 [builder 11/12] RUN crystal spec --warnings all     --link-flags "-lxml2 -llzma"
+2025-06-26T01:37:56.263027536Z #25 DONE 2.6s
+2025-06-26T01:37:56.263067117Z 
+2025-06-26T01:37:56.263072797Z #26 [builder 12/12] RUN --mount=type=cache,target=/root/.cache/crystal if [[ "${release}" == 1 ]] ; then         crystal build ./src/invidious.cr         --release --mcpu=x86-64-v2         --static --warnings all         --link-flags "-lxml2 -llzma";     else         crystal build ./src/invidious.cr         --static --warnings all         --link-flags "-lxml2 -llzma";     fi
+2025-06-26T01:37:57.01447218Z #26 0.731 
+2025-06-26T01:37:57.01449558Z #26 0.731 Checking player dependencies, this may take more than 20 minutes... If it is stuck, check your internet connection.
+2025-06-26T01:38:22.863775958Z #26 26.73 Resolving player dependencies
+2025-06-26T01:38:22.863797518Z #26 26.73 Fetched videojs-contrib-quality-levels
+2025-06-26T01:38:22.863801108Z #26 26.73 Fetched videojs-http-source-selector
+2025-06-26T01:38:24.206275116Z 27.96 In src/invidious.cr:97:25
+2025-06-26T01:38:24.206277456Z 27.96 
+2025-06-26T01:38:24.206279906Z 27.96  97 | CURRENT_COMMIT  = {{ "#{`git rev-list HEAD --max-count=1 --abbrev-commit`.strip}" }}
+2025-06-26T01:38:24.206281906Z 27.96                               ^
+2025-06-26T01:38:24.206284376Z 27.96 Error: error executing command: git rev-list HEAD --max-count=1 --abbrev-commit, got exit status 128
+2025-06-26T01:38:24.206286796Z ------
+2025-06-26T01:38:24.207443121Z Dockerfile:24
+2025-06-26T01:38:24.207459851Z --------------------
+2025-06-26T01:38:24.207464231Z   23 |         --link-flags "-lxml2 -llzma"
+2025-06-26T01:38:24.207467461Z   24 | >>> RUN --mount=type=cache,target=/root/.cache/crystal if [[ "${release}" == 1 ]] ; then \
+2025-06-26T01:38:24.207473561Z   25 | >>>         crystal build ./src/invidious.cr \
+2025-06-26T01:38:24.207476491Z   26 | >>>         --release --mcpu=x86-64-v2 \
+2025-06-26T01:38:24.207479121Z   27 | >>>         --static --warnings all \
+2025-06-26T01:38:24.207480801Z   28 | >>>         --link-flags "-lxml2 -llzma"; \
+2025-06-26T01:38:24.207482481Z   29 | >>>     else \
+2025-06-26T01:38:24.207484351Z   30 | >>>         crystal build ./src/invidious.cr \
+2025-06-26T01:38:24.207486001Z   31 | >>>         --static --warnings all \
+2025-06-26T01:38:24.207487762Z   32 | >>>         --link-flags "-lxml2 -llzma"; \
+2025-06-26T01:38:24.207489431Z   33 | >>>     fi
+2025-06-26T01:38:24.207491091Z   34 |     
+2025-06-26T01:38:24.207492862Z --------------------
+2025-06-26T01:38:24.207495242Z error: failed to solve: process "/bin/sh -c if [[ \"${release}\" == 1 ]] ; then         crystal build ./src/invidious.cr         --release --mcpu=x86-64-v2         --static --warnings all         --link-flags \"-lxml2 -llzma\";     else         crystal build ./src/invidious.cr         --static --warnings all         --link-flags \"-lxml2 -llzma\";     fi" did not complete successfully: exit code: 1
