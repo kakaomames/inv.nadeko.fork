@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: invidious
+    name: inv-pokemogu
     env: docker
     repo: https://github.com/kakaomames/inv.nadeko.fork
     branch: master
