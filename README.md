@@ -1,6 +1,6 @@
 # nadeko.net Invidious fork
 
-これは、私が自分のインスタンスのために行った機能を備えたInvidiousのフォークです。インスタンスを維持したい場合は、このフォークとそのコンテナイメージを自由に使用してください（ドッカーだけでなく、Podmanとも互換性があります！）
+これは、私が自分のインスタンスのために行った機能を備えたInvidiousのフォークです。インスタンスを維持したい場合は、このフォークとそのコンテナイメージを自由に使用してください（ドッカーだけでなく、Podmanとも互換性があります！）(色々と日本語訳中)
 
 https://git.nadeko.net/Fijxu/-/packages/container/invidious/latest
 
