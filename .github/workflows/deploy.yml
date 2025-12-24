@@ -1,0 +1,31 @@
+name: Invidious Quick Start
+
+on:
+  workflow_dispatch: # GitHubのブラウザ上から手動でポチッと起動できるぞ！
+  repository_dispatch:
+    types: [quick_start] # cURLからも起動可能だ！
+
+jobs:
+  launch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📦 コードを抽出
+        uses: actions/checkout@v4
+
+      - name: 💎 Crystal環境のセットアップ
+        uses: crystal-lang/install-crystal@v1
+        with:
+          crystal: latest
+
+      - name: 🛠 依存関係（Shards）のインストール
+        run: |
+          # 必要なライブラリをインストールするぞ！
+          sudo apt-get update
+          sudo apt-get install -y libssl-dev libxml2-dev libyaml-dev libpcre3-dev libevent-dev
+          shards install
+        
+      - name: 🚀 ビルド＆起動テスト
+        run: |
+          # まずはビルドして、バージョンが表示されるか確認だ！
+          crystal build src/invidious.cr --release
+          ./invidious --version
